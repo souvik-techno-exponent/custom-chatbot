@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AppBar, Toolbar, Typography, Box, TextField, IconButton, Paper, Stack } from '@mui/material';
+import { AppBar, Toolbar, Typography, Box, TextField, IconButton, Paper, Stack, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
-import { bootstrap, sendUserMessage } from './api.js';
+import { bootstrap, nextQuestion, saveTranscript } from './api.js';
 
 // Parse query params set by embed script
 function useParams() {
@@ -13,24 +13,32 @@ export default function App() {
   const [bot, setBot] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+  const [askSaveOpen, setAskSaveOpen] = useState(false);
+  const [saved, setSaved] = useState(false);
   const chatRef = useRef(null);
 
   useEffect(() => {
     async function init() {
-      const { bot, thread, questions } = await bootstrap(botSlug, threadKey, pageUrl);
+      const { bot, questions } = await bootstrap(botSlug, threadKey, pageUrl);
       setBot(bot);
-      setMessages(thread.messages);
+      // Render first question locally (no DB writes)
+      if (questions?.[0]) {
+        setMessages([{ role: 'assistant', text: questions[0], ts: Date.now() }]);
+      }
 
-      // const hasAssistant = thread.messages.some(m => m.role === 'assistant');
-      // const hasUser = thread.messages.some(m => m.role === 'user');
 
-      // // If first visit: ask first question from server-provided questions
-      // if (!hasAssistant && !hasUser && questions.length > 0) {
-      //   setMessages(prev => [...prev, { role: 'assistant', text: questions[0] }]);
-      // }
     }
     init();
-  }, [botSlug, threadKey, pageUrl]);
+    const onBeforeUnload = (e) => {
+      const hasUserMsgs = messages.some(m => m.role === 'user');
+      if (!saved && hasUserMsgs) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [botSlug, threadKey, pageUrl, messages, saved]);
 
   useEffect(() => {
     if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
@@ -40,16 +48,36 @@ export default function App() {
     const text = input.trim();
     if (!text) return;
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', text }]);
+    // Add user message locally
+    let newMsgs = [];
+    setMessages(prev => {
+      newMsgs = [...prev, { role: 'user', text, ts: Date.now() }];
+      return newMsgs;
+    });
     try {
-      const { thread, nextQuestion } = await sendUserMessage(botSlug, {
-        threadKey,
-        pageUrl,
-        text
-      });
-      setMessages(thread.messages);
+      // answersCount = number of user answers so far
+      const answersCount = (newMsgs.filter(m => m.role === 'user')).length;
+      const { nextQuestion: nq } = await nextQuestion(botSlug, answersCount);
+      if (nq) {
+        setMessages(prev => [...prev, { role: 'assistant', text: nq, ts: Date.now() }]);
+      } else {
+        // no next question => completed (after 5th)
+        setAskSaveOpen(true);
+      }
     } catch (e) {
       console.error(e);
+    }
+  }
+
+  async function handleSaveConsent(ok) {
+    setAskSaveOpen(false);
+    if (!ok) return;
+    try {
+      await saveTranscript(botSlug, { threadKey, pageUrl, transcript: messages });
+      setSaved(true);
+    } catch (e) {
+      console.error(e);
+      // optionally show a toast
     }
   }
 
@@ -58,6 +86,7 @@ export default function App() {
       <AppBar position="static" sx={{ bgcolor: bot?.brandColor || '#1976d2' }}>
         <Toolbar>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>{bot?.name || 'Assistant'}</Typography>
+          {saved && <Typography variant="caption" sx={{ ml: 2, opacity: 0.85 }}>Transcript saved</Typography>}
         </Toolbar>
       </AppBar>
 
@@ -91,6 +120,19 @@ export default function App() {
           <IconButton color="primary" onClick={onSend}><SendIcon /></IconButton>
         </Stack>
       </Box>
+
+      {/* Consent dialog */}
+      <Dialog open={askSaveOpen} onClose={() => handleSaveConsent(false)}>
+        <DialogTitle>Save chat?</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2">Do u wnat to save the chat?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => handleSaveConsent(false)}>No</Button>
+          <Button onClick={() => handleSaveConsent(true)} variant="contained">Yes, save</Button>
+        </DialogActions>
+      </Dialog>
+
     </Box>
   );
 }

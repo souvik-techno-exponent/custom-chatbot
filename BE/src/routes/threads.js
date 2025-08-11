@@ -4,15 +4,11 @@ import { Bot } from '../models/Bot.js';
 
 const router = Router();
 
-/**
- * GET: bootstrap a thread (idempotent by botSlug + threadKey + pageUrl)
- * Returns bot info + existing thread (or creates one empty) + first question if needed
- */
+// GET bootstrap: do NOT create any DB record. Just return bot & questions.
 router.get('/:botSlug/thread', async (req, res) => {
     try {
         const { botSlug } = req.params;
         const { threadKey, pageUrl } = req.query;
-
         if (!threadKey || !pageUrl) {
             return res.status(400).json({ error: 'threadKey and pageUrl are required' });
         }
@@ -20,63 +16,65 @@ router.get('/:botSlug/thread', async (req, res) => {
         const bot = await Bot.findOne({ slug: botSlug });
         if (!bot) return res.status(404).json({ error: 'Bot not found' });
 
-        let thread = await Thread.findOne({ botSlug, threadKey, pageUrl });
-        if (!thread) {
-            thread = await Thread.create({ botSlug, threadKey, pageUrl, messages: [] });
-        }
-
-        if (thread.messages.length === 0 && bot.questions?.length) {
-            thread.messages.push({ role: 'assistant', text: bot.questions[0] });
-            await thread.save();
-        }
-
-        // If conversation hasn't started, push first assistant question locally in client (to avoid double-push on retries)
-        res.json({ bot, thread, questions: bot.questions });
+        // no DB writes – client will render first question locally
+        res.json({ bot, questions: bot.questions || [] });
     } catch (e) {
         console.error(e);
         res.status(500).json({ error: 'Failed to bootstrap thread' });
     }
 });
-
-/**
- * POST: append a user message; decide next assistant question based on count
- */
+// POST next-step: stateless. No DB writes. Compute next question from answersCount.
 router.post('/:botSlug/thread', async (req, res) => {
     try {
         const { botSlug } = req.params;
-        const { threadKey, pageUrl, text } = req.body || {};
-
-        if (!threadKey || !pageUrl || !text) {
-            return res.status(400).json({ error: 'threadKey, pageUrl and text are required' });
+        const { answersCount } = req.body || {};
+        // answersCount = how many user answers have been given so far (including current one)
+        if (typeof answersCount !== 'number' || answersCount < 0) {
+            return res.status(400).json({ error: 'answersCount is required and must be >= 0' });
         }
 
         const bot = await Bot.findOne({ slug: botSlug });
         if (!bot) return res.status(404).json({ error: 'Bot not found' });
 
-        let thread = await Thread.findOne({ botSlug, threadKey, pageUrl });
-        if (!thread) {
-            thread = await Thread.create({ botSlug, threadKey, pageUrl, messages: [] });
-        }
-
-        // Save user message
-        thread.messages.push({ role: 'user', text });
-        await thread.save();
-
-        // Determine next question based on how many user answers we have
-        const userAnswers = thread.messages.filter(m => m.role === 'user').length;
-        const nextQuestion = bot.questions[userAnswers] || null;
-
-        if (nextQuestion) {
-            // Save assistant message
-            thread.messages.push({ role: 'assistant', text: nextQuestion });
-            await thread.save();
-        }
-
-        res.json({ thread, nextQuestion });
+        const nextQuestion = bot.questions[answersCount] || null;
+        res.json({ nextQuestion });
     } catch (e) {
         console.error(e);
-        res.status(500).json({ error: 'Failed to append message' });
+        res.status(500).json({ error: 'Failed to compute next question' });
     }
 });
 
+// POST save: only when user explicitly consents, persist the full transcript once.
+router.post('/:botSlug/save', async (req, res) => {
+    try {
+        const { botSlug } = req.params;
+        const { threadKey, pageUrl, transcript } = req.body || {};
+        if (!threadKey || !pageUrl || !Array.isArray(transcript)) {
+            return res.status(400).json({ error: 'threadKey, pageUrl and transcript[] are required' });
+        }
+
+        const bot = await Bot.findOne({ slug: botSlug });
+        if (!bot) return res.status(404).json({ error: 'Bot not found' });
+
+        // Upsert on (botSlug, threadKey, pageUrl) – overwrite any previous save for same session
+        const doc = await Thread.findOneAndUpdate(
+            { botSlug, threadKey, pageUrl },
+            {
+                botSlug,
+                threadKey,
+                pageUrl,
+                messages: transcript.map(m => ({
+                    role: m.role === 'user' ? 'user' : 'assistant',
+                    text: String(m.text || ''),
+                    ts: m.ts ? new Date(m.ts) : new Date()
+                }))
+            },
+            { new: true, upsert: true }
+        );
+        res.json({ ok: true, saved: true, threadId: doc._id.toString() });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: 'Failed to save transcript' });
+    }
+});
 export default router;

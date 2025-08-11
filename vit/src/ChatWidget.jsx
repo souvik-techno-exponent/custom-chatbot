@@ -1,10 +1,12 @@
 // ChatWidget.jsx
 import React, { useEffect, useRef, useState } from 'react';
+import { saveTranscript } from './api.js';
 
 const API_BASE = (window.__WIDGET_CONFIG__ && window.__WIDGET_CONFIG__.API_BASE) || 'http://localhost:4000';
 
 export default function ChatWidget() {
     const [opened, setOpened] = useState(false);
+    const [saved, setSaved] = useState(false);
     const [brand, setBrand] = useState({ primaryColor: '#1976d2', title: 'Assistant', launcherText: 'Chat' });
     const [conversationId, setConversationId] = useState(null);
     const [messages, setMessages] = useState([]);
@@ -63,9 +65,26 @@ export default function ChatWidget() {
         setMessages(prev => [...prev, botMsg]);
     }
 
+    async function togglePanel() {
+        if (opened) {
+            const hasUserMsgs = messages.some(m => m.role === 'user');
+            if (hasUserMsgs && !saved) {
+                const ok = window.confirm('Do u wnat to save the chat?');
+                if (ok) {
+                    try {
+                        await saveTranscript('<bot-slug-here>', { threadKey: 'local', pageUrl: location.href, transcript: messages });
+                        setSaved(true);
+                    } catch (e) { console.error(e); }
+                }
+            }
+        }
+        setOpened(!opened);
+    }
+
     return (
         <>
-            <button className="cb-launcher" style={{ background: brand.primaryColor }} onClick={() => setOpened(!opened)}>
+            {/* <button className="cb-launcher" style={{ background: brand.primaryColor }} onClick={() => setOpened(!opened)}> */}
+            <button className="cb-launcher" style={{ background: brand.primaryColor }} onClick={togglePanel}>
                 {brand.launcherText}
             </button>
             {opened && (

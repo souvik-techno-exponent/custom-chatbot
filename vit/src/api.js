@@ -30,3 +30,15 @@ export async function deleteBot(slug) {
     if (!r.ok) throw new Error('Failed to delete bot');
     return r.json();
 }
+
+
+// Persist transcript only on consent
+export async function saveTranscript(botSlug, { threadKey, pageUrl, transcript }) {
+    const r = await fetch(`${BASE}/threads/${botSlug}/save`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ threadKey, pageUrl, transcript })
+    });
+    if (!r.ok) throw new Error('Failed to save transcript');
+    return r.json();
+}
