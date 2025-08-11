@@ -8,11 +8,19 @@
  * Conversation is anonymous; a local threadKey is stored in localStorage per (botSlug + pageHost).
  */
 (function () {
-    // const SERVER_ORIGIN = 'http://localhost:4000';
-    // const WIDGET_URL = 'http://localhost:5174/index.html'; // << DEV alt
-    const WIDGET_URL = 'http://localhost:5173/chat-bot/index.html';
-
+    // Resolve widget URL without hardcoding:
+    // - If data-widget-url is provided, use it as-is (absolute URL).
+    // - Else build from (origin of this script) + (data-widget-path or default).
     const currentScript = document.currentScript;
+    const scriptOrigin = new URL(currentScript.src).origin;
+    const widgetUrlAttr = currentScript.getAttribute('data-widget-url');
+    const widgetOriginAttr = currentScript.getAttribute('data-widget-origin'); // optional override
+    const widgetPathAttr = currentScript.getAttribute('data-widget-path') || '/chat-bot/index.html';
+
+    const WIDGET_URL = widgetUrlAttr
+        ? widgetUrlAttr
+        : `${widgetOriginAttr || scriptOrigin}${widgetPathAttr}`;
+
     const botSlug = (currentScript && currentScript.getAttribute('data-bot-slug')) || '';
     if (!botSlug) {
         console.error('[Embed] data-bot-slug is required');

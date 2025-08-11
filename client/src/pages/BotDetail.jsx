@@ -6,6 +6,9 @@ import { useNavigate } from 'react-router-dom';
 import { deleteBot } from '../api.js';
 import DeleteIcon from '@mui/icons-material/Delete';
 
+const EMBED_BASE = import.meta.env.VITE_EMBED_BASE || window.location.origin;
+const WIDGET_PATH = import.meta.env.VITE_WIDGET_PATH || '/chat-bot/index.html';
+
 
 export default function BotDetail() {
     const { slug } = useParams();
@@ -31,7 +34,7 @@ export default function BotDetail() {
 
     if (!bot) return null;
 
-    const snippet = `<script src="http://localhost:5173/embed.js" data-bot-slug="${bot.slug}"></script>`;
+    const snippet = `<script src="${EMBED_BASE}/embed.js" data-bot-slug="${bot.slug}" data-widget-path="${WIDGET_PATH}"></script>`;
 
     return (
         <Card>
