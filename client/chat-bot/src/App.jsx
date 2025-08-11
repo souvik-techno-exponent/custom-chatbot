@@ -16,18 +16,25 @@ export default function App() {
   const [askSaveOpen, setAskSaveOpen] = useState(false);
   const [saved, setSaved] = useState(false);
   const chatRef = useRef(null);
+  const bootedRef = useRef(false);
 
   // 1) Run bootstrap ONCE per slug/thread/page change
   useEffect(() => {
+    const bootKey = `${botSlug}::${threadKey}::${pageUrl}`;
+    if (bootedRef.current === bootKey) return; // already bootstrapped for this key
+    bootedRef.current = bootKey;
+
     async function init() {
       const { bot, questions } = await bootstrap(botSlug, threadKey, pageUrl);
       setBot(bot);
       if (questions?.[0]) {
+        // seed only once for this boot key
         setMessages([{ role: 'assistant', text: questions[0], ts: Date.now() }]);
       }
     }
     init();
   }, [botSlug, threadKey, pageUrl]);
+
 
   // 2) Handle beforeunload separately so deps can include messages/saved
   useEffect(() => {
@@ -46,24 +53,24 @@ export default function App() {
     if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
   }, [messages]);
 
+
   async function onSend() {
     const text = input.trim();
     if (!text) return;
     setInput('');
-    // Add user message locally
-    let newMsgs = [];
-    setMessages(prev => {
-      newMsgs = [...prev, { role: 'user', text, ts: Date.now() }];
-      return newMsgs;
-    });
+
+    // compute how many user answers there will be *after* this send
+    const answersCount = messages.filter(m => m.role === 'user').length + 1;
+
+    // append the user's message
+    setMessages(prev => [...prev, { role: 'user', text, ts: Date.now() }]);
+
     try {
-      // answersCount = number of user answers so far
-      const answersCount = (newMsgs.filter(m => m.role === 'user')).length;
       const { nextQuestion: nq } = await nextQuestion(botSlug, answersCount);
       if (nq) {
         setMessages(prev => [...prev, { role: 'assistant', text: nq, ts: Date.now() }]);
       } else {
-        // no next question => completed (after 5th)
+        // finished (no more questions)
         setAskSaveOpen(true);
       }
     } catch (e) {
