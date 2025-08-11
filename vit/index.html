@@ -1,21 +1,11 @@
 <!doctype html>
-<html lang="en">
+<html>
 
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Chat Widget</title>
-  <script>
-    // Read token from URL hash and expose for widget app
-    (function () {
-      const token = (location.hash.split('token=')[1] || '').split('&')[0];
-      window.__WIDGET_CONFIG__ = {
-        embedToken: decodeURIComponent(token),
-        API_BASE: 'http://localhost:4000'
-      };
-    })();
-  </script>
+  <title>Chatbot Admin (POC)</title>
 </head>
 
 <body>

@@ -1,0 +1,89 @@
+/**
+ * Simple embed script (no config needed beyond data-bot-slug).
+ * Usage:
+ * <script src="http://localhost:4000/embed.js" data-bot-slug="YOUR_BOT_SLUG"></script>
+ *
+ * It injects a floating button and an iframe panel that loads the widget.
+ * Conversation is anonymous; a local threadKey is stored in localStorage per (botSlug + pageHost).
+ */
+(function () {
+    // Constants
+    const SERVER_ORIGIN = 'http://localhost:4000';
+    const WIDGET_URL = SERVER_ORIGIN + '/widget/index.html';
+
+    // Read bot slug
+    const currentScript = document.currentScript;
+    const botSlug = (currentScript && currentScript.getAttribute('data-bot-slug')) || '';
+
+    if (!botSlug) {
+        console.error('[Embed] data-bot-slug is required');
+        return;
+    }
+
+    // Minimal styles + container
+    const container = document.createElement('div');
+    container.style.position = 'fixed';
+    container.style.bottom = '20px';
+    container.style.right = '20px';
+    container.style.zIndex = '2147483647';
+    document.body.appendChild(container);
+
+    const button = document.createElement('button');
+    button.innerText = 'Chat';
+    button.style.padding = '10px 16px';
+    button.style.borderRadius = '9999px';
+    button.style.border = 'none';
+    button.style.cursor = 'pointer';
+    button.style.boxShadow = '0 6px 18px rgba(0,0,0,0.2)';
+    button.style.background = '#1976d2';
+    button.style.color = '#fff';
+    container.appendChild(button);
+
+    const panel = document.createElement('div');
+    panel.style.position = 'fixed';
+    panel.style.bottom = '80px';
+    panel.style.right = '20px';
+    panel.style.width = '380px';
+    panel.style.height = '560px';
+    panel.style.maxWidth = '95vw';
+    panel.style.maxHeight = '80vh';
+    panel.style.boxShadow = '0 10px 30px rgba(0,0,0,0.25)';
+    panel.style.borderRadius = '16px';
+    panel.style.overflow = 'hidden';
+    panel.style.display = 'none';
+    container.appendChild(panel);
+
+    const iframe = document.createElement('iframe');
+    iframe.title = 'Chatbot';
+    iframe.style.width = '100%';
+    iframe.style.height = '100%';
+    iframe.style.border = '0';
+    panel.appendChild(iframe);
+
+    function getThreadKey() {
+        try {
+            const host = location.host;
+            const keyName = `poc_thread_${botSlug}_${host}`;
+            let key = localStorage.getItem(keyName);
+            if (!key) {
+                key = 't-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+                localStorage.setItem(keyName, key);
+            }
+            return key;
+        } catch (e) {
+            // If localStorage blocked, fallback to ephemeral key per open
+            return 't-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+        }
+    }
+
+    button.addEventListener('click', () => {
+        const visible = panel.style.display === 'block';
+        panel.style.display = visible ? 'none' : 'block';
+        if (!visible) {
+            const threadKey = getThreadKey();
+            const pageUrl = location.href;
+            const src = `${WIDGET_URL}?bot=${encodeURIComponent(botSlug)}&thread=${encodeURIComponent(threadKey)}&page=${encodeURIComponent(pageUrl)}`;
+            if (iframe.src !== src) iframe.src = src;
+        }
+    });
+})();

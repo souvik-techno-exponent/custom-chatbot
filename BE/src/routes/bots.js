@@ -1,55 +1,47 @@
-// bots.js
-const express = require('express');
-const router = express.Router();
-const Bot = require('../models/Bot');
-const { signEmbedPayload } = require('../utils/signer');
+import { Router } from 'express';
+import { Bot } from '../models/Bot.js';
+import { QUESTION_POOL_25 } from '../data/questionPool.js';
 
+const router = Router();
+
+// Utility: pick 5 unique random questions from pool of 25
+function pickFiveUnique(pool) {
+    const indices = new Set();
+    while (indices.size < 5) {
+        indices.add(Math.floor(Math.random() * pool.length));
+    }
+    return Array.from(indices).map(i => pool[i]);
+}
+
+// Create a bot (auto-pick 5 unique questions)
 router.post('/', async (req, res) => {
-    // Create bot
-    const bot = await Bot.create({
-        ...req.body,
-        tenantId: req.user?.tenantId || 'demo',
-        createdBy: req.user?.id || 'demo'
-    });
-    res.json(bot);
+    try {
+        const { name, brandColor, welcomeText } = req.body || {};
+        const questions = pickFiveUnique(QUESTION_POOL_25);
+        const bot = await Bot.create({
+            name,
+            brandColor: brandColor || '#1976d2',
+            welcomeText: welcomeText || "Hi! I'm your assistant.",
+            questions
+        });
+        res.json(bot);
+    } catch (e) {
+        console.error(e);
+        res.status(400).json({ error: 'Failed to create bot' });
+    }
 });
 
-router.get('/', async (req, res) => {
-    const bots = await Bot.find({ tenantId: req.user?.tenantId || 'demo' }).sort('-createdAt');
+// List bots
+router.get('/', async (_req, res) => {
+    const bots = await Bot.find().sort({ createdAt: -1 });
     res.json(bots);
 });
 
-router.post('/:id/publish', async (req, res) => {
-    const { id } = req.params;
-    const { allowlistedDomains } = req.body;
-
-    const bot = await Bot.findByIdAndUpdate(id, {
-        published: true,
-        allowlistedDomains: allowlistedDomains || [],
-        $inc: { version: 1 }
-    }, { new: true });
-
-    // Signed token for the client widget (no secrets, just references)
-    const token = signEmbedPayload(
-        { botId: bot._id.toString(), version: bot.version },
-        process.env.EMBED_TOKEN_SECRET
-    );
-
-    // single-line script tag for host sites
-    const script = `<script src="${process.env.CDN_BASE}/cb.js" data-bot="${token}" async></script>`;
-    res.json({ bot, embedScript: script });
+// Get a single bot
+router.get('/:slug', async (req, res) => {
+    const bot = await Bot.findOne({ slug: req.params.slug });
+    if (!bot) return res.status(404).json({ error: 'Not found' });
+    res.json(bot);
 });
 
-router.get('/:id/script', async (req, res) => {
-    // convenience endpoint to fetch the latest script
-    const bot = await Bot.findById(req.params.id);
-    if (!bot || !bot.published) return res.status(404).json({ error: 'Bot not published' });
-    const token = signEmbedPayload(
-        { botId: bot._id.toString(), version: bot.version },
-        process.env.EMBED_TOKEN_SECRET
-    );
-    const script = `<script src="${process.env.CDN_BASE}/cb.js" data-bot="${token}" async></script>`;
-    res.json({ embedScript: script });
-});
-
-module.exports = router;
+export default router;
