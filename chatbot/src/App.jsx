@@ -17,18 +17,20 @@ export default function App() {
   const [saved, setSaved] = useState(false);
   const chatRef = useRef(null);
 
+  // 1) Run bootstrap ONCE per slug/thread/page change
   useEffect(() => {
     async function init() {
       const { bot, questions } = await bootstrap(botSlug, threadKey, pageUrl);
       setBot(bot);
-      // Render first question locally (no DB writes)
       if (questions?.[0]) {
         setMessages([{ role: 'assistant', text: questions[0], ts: Date.now() }]);
       }
-
-
     }
     init();
+  }, [botSlug, threadKey, pageUrl]);
+
+  // 2) Handle beforeunload separately so deps can include messages/saved
+  useEffect(() => {
     const onBeforeUnload = (e) => {
       const hasUserMsgs = messages.some(m => m.role === 'user');
       if (!saved && hasUserMsgs) {
@@ -37,8 +39,8 @@ export default function App() {
       }
     };
     window.addEventListener('beforeunload', onBeforeUnload);
-    return () => window.removeEventListener('beforeunload', onBeforeUnload);
-  }, [botSlug, threadKey, pageUrl, messages, saved]);
+    return () => window.removeEventListener('beforeunload', onBeforeunload);
+  }, [messages, saved]);
 
   useEffect(() => {
     if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
