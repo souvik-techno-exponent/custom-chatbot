@@ -25,6 +25,11 @@ router.get('/:botSlug/thread', async (req, res) => {
             thread = await Thread.create({ botSlug, threadKey, pageUrl, messages: [] });
         }
 
+        if (thread.messages.length === 0 && bot.questions?.length) {
+            thread.messages.push({ role: 'assistant', text: bot.questions[0] });
+            await thread.save();
+        }
+
         // If conversation hasn't started, push first assistant question locally in client (to avoid double-push on retries)
         res.json({ bot, thread, questions: bot.questions });
     } catch (e) {

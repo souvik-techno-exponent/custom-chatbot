@@ -21,13 +21,13 @@ export default function App() {
       setBot(bot);
       setMessages(thread.messages);
 
-      const hasAssistant = thread.messages.some(m => m.role === 'assistant');
-      const hasUser = thread.messages.some(m => m.role === 'user');
+      // const hasAssistant = thread.messages.some(m => m.role === 'assistant');
+      // const hasUser = thread.messages.some(m => m.role === 'user');
 
-      // If first visit: ask first question from server-provided questions
-      if (!hasAssistant && !hasUser && questions.length > 0) {
-        setMessages(prev => [...prev, { role: 'assistant', text: questions[0] }]);
-      }
+      // // If first visit: ask first question from server-provided questions
+      // if (!hasAssistant && !hasUser && questions.length > 0) {
+      //   setMessages(prev => [...prev, { role: 'assistant', text: questions[0] }]);
+      // }
     }
     init();
   }, [botSlug, threadKey, pageUrl]);
@@ -48,9 +48,6 @@ export default function App() {
         text
       });
       setMessages(thread.messages);
-      if (nextQuestion) {
-        setMessages(prev => [...prev, { role: 'assistant', text: nextQuestion }]);
-      }
     } catch (e) {
       console.error(e);
     }
