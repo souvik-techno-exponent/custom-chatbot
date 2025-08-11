@@ -9,7 +9,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         admin: resolve(__dirname, 'index.html'),
-        widget: resolve(__dirname, 'chatBot/index.html'),
+        widget: resolve(__dirname, 'chat-bot/index.html'),
       },
     },
   },
