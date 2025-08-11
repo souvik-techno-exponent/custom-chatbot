@@ -1,3 +1,4 @@
+// DEV mode: point to Vite dev server for widget
 /**
  * Simple embed script (no config needed beyond data-bot-slug).
  * Usage:
@@ -7,20 +8,16 @@
  * Conversation is anonymous; a local threadKey is stored in localStorage per (botSlug + pageHost).
  */
 (function () {
-    // Constants
     const SERVER_ORIGIN = 'http://localhost:4000';
-    const WIDGET_URL = SERVER_ORIGIN + '/widget/index.html';
+    const WIDGET_URL = 'http://localhost:5174/index.html'; // << DEV
 
-    // Read bot slug
     const currentScript = document.currentScript;
     const botSlug = (currentScript && currentScript.getAttribute('data-bot-slug')) || '';
-
     if (!botSlug) {
         console.error('[Embed] data-bot-slug is required');
         return;
     }
 
-    // Minimal styles + container
     const container = document.createElement('div');
     container.style.position = 'fixed';
     container.style.bottom = '20px';
@@ -70,7 +67,7 @@
                 localStorage.setItem(keyName, key);
             }
             return key;
-        } catch (e) {
+        } catch {
             // If localStorage blocked, fallback to ephemeral key per open
             return 't-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
         }
