@@ -33,9 +33,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/bots', botsRouter);
 app.use('/api/threads', threadsRouter);
 
-// Serve widget build in prod (optional)
-app.use('/widget', express.static(path.join(__dirname, '..', '..', 'widget', 'dist')));
-
 const PORT = process.env.PORT || 4000;
 
 connectDB(process.env.MONGO_URI)
