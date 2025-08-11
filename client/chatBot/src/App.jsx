@@ -127,7 +127,7 @@ export default function App() {
       <Dialog open={askSaveOpen} onClose={() => handleSaveConsent(false)}>
         <DialogTitle>Save chat?</DialogTitle>
         <DialogContent>
-          <Typography variant="body2">Do u wnat to save the chat?</Typography>
+          <Typography variant="body2">Do you want to save the chat?</Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => handleSaveConsent(false)}>No</Button>

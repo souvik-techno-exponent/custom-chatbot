@@ -9,7 +9,8 @@
  */
 (function () {
     // const SERVER_ORIGIN = 'http://localhost:4000';
-    const WIDGET_URL = 'http://localhost:5174/index.html'; // << DEV
+    // const WIDGET_URL = 'http://localhost:5174/index.html'; // << DEV
+    const WIDGET_URL = 'http://localhost:5173/chatBot/index.html';
 
     const currentScript = document.currentScript;
     const botSlug = (currentScript && currentScript.getAttribute('data-bot-slug')) || '';
