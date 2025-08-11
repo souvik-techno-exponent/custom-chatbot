@@ -19,16 +19,16 @@ app.use('/api/bots', require('./routes/bots'));
 app.use('/api/conversations', require('./routes/conversations'));
 
 // Serve widget bundle (built assets)
-app.use('/widget', express.static(path.join(__dirname, '../../widget/dist')));
+app.use('/widget', express.static(path.join(__dirname, '../../vit/dist')));
 app.get('/embed', (req, res) => {
     // Minimal page hosting the widget iframe app
-    res.sendFile(path.join(__dirname, '../../widget/dist/index.html'));
+    res.sendFile(path.join(__dirname, '../../vit/dist/index.html'));
 });
 
 // Tiny CDN endpoint for single-line script
 app.get('/cb.js', (req, res) => {
-    // This file can be the minified loader from widget/dist/loader.js
-    res.sendFile(path.join(__dirname, '../../widget/dist/loader.js'));
+    // This file can be the minified loader from vit/dist/loader.js
+    res.sendFile(path.join(__dirname, '../../vit/dist/loader.js'));
 });
 
 async function start() {

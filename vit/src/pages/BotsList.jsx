@@ -20,7 +20,10 @@ export default function BotsList() {
 
     return (
         <Stack spacing={3} sx={{ maxWidth: 900, mx: 'auto', my: 4 }}>
-            <Typography variant="h5">Your Bots</Typography>
+            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                <Typography variant="h5">Your Bots</Typography>
+                <Button variant="contained" href="/admin/create">New Bot</Button>
+            </Stack>
             {bots.map(b => (
                 <Stack key={b._id} direction="row" spacing={2} alignItems="center">
                     <Typography sx={{ minWidth: 220 }}>{b.name}</Typography>

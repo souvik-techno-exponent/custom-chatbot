@@ -23,10 +23,12 @@ export default function CreateBot() {
             questions
         });
         alert('Bot created: ' + bot._id);
+        window.location.href = '/admin';
     }
 
     return (
         <Stack spacing={2} sx={{ maxWidth: 640, mx: 'auto', my: 4 }}>
+            <Button href="/admin" variant="text">Back to Bots</Button>
             <TextField label="Bot Name" value={name} onChange={e => setName(e.target.value)} />
             <TextField label="Brand Color" value={primaryColor} onChange={e => setPrimaryColor(e.target.value)} />
             <TextField label="Launcher Text" value={launcherText} onChange={e => setLauncherText(e.target.value)} />
