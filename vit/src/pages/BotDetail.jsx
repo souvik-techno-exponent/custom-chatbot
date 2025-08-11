@@ -2,14 +2,32 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { getBot } from '../api.js';
 import { Card, CardContent, Typography, TextField, Stack, Button } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { deleteBot } from '../api.js';
+import DeleteIcon from '@mui/icons-material/Delete';
+
 
 export default function BotDetail() {
     const { slug } = useParams();
     const [bot, setBot] = useState(null);
+    const nav = useNavigate();
 
     useEffect(() => {
         getBot(slug).then(setBot);
     }, [slug]);
+
+    async function onDelete() {
+        if (!bot) return;
+        const yes = window.confirm(`Delete bot "${bot.name}"? This will remove all its threads.`);
+        if (!yes) return;
+        try {
+            await deleteBot(bot.slug);
+            nav('/'); // go back to list
+        } catch (e) {
+            alert('Failed to delete bot');
+            console.error(e);
+        }
+    }
 
     if (!bot) return null;
 
@@ -29,6 +47,11 @@ export default function BotDetail() {
                 <ul>
                     {bot.questions.map((q, idx) => <li key={idx}><Typography variant="body2">{q}</Typography></li>)}
                 </ul>
+                <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+                    <Button variant="outlined" color="error" onClick={onDelete} startIcon={<DeleteIcon />}>
+                        Delete Bot
+                    </Button>
+                </Stack>
             </CardContent>
         </Card>
     );

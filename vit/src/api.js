@@ -22,3 +22,11 @@ export async function getBot(slug) {
     if (!r.ok) throw new Error('Bot not found');
     return r.json();
 }
+
+
+// ADD THIS function
+export async function deleteBot(slug) {
+    const r = await fetch(`${BASE}/bots/${slug}`, { method: 'DELETE' });
+    if (!r.ok) throw new Error('Failed to delete bot');
+    return r.json();
+}
