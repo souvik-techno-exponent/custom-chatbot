@@ -1,15 +1,15 @@
 // DEV mode: point to Vite dev server for widget
 /**
  * Simple embed script (no config needed beyond data-bot-slug).
- * Usage:
- * <script src="http://localhost:4000/embed.js" data-bot-slug="YOUR_BOT_SLUG"></script>
+ * Usage (DEV):
+ * <script src="http://localhost:5173/embed.js" data-bot-slug="YOUR_BOT_SLUG"></script>
  *
  * It injects a floating button and an iframe panel that loads the widget.
  * Conversation is anonymous; a local threadKey is stored in localStorage per (botSlug + pageHost).
  */
 (function () {
     // const SERVER_ORIGIN = 'http://localhost:4000';
-    // const WIDGET_URL = 'http://localhost:5174/index.html'; // << DEV
+    // const WIDGET_URL = 'http://localhost:5174/index.html'; // << DEV alt
     const WIDGET_URL = 'http://localhost:5173/chat-bot/index.html';
 
     const currentScript = document.currentScript;

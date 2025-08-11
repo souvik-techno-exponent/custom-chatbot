@@ -26,9 +26,6 @@ app.use(cors({
     credentials: true
 }));
 
-// Public: serve embed.js
-app.use(express.static(path.join(__dirname, 'public')));
-
 // APIs
 app.use('/api/bots', botsRouter);
 app.use('/api/threads', threadsRouter);

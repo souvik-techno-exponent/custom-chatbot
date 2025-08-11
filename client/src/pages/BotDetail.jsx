@@ -31,7 +31,7 @@ export default function BotDetail() {
 
     if (!bot) return null;
 
-    const snippet = `<script src="http://localhost:4000/embed.js" data-bot-slug="${bot.slug}"></script>`;
+    const snippet = `<script src="http://localhost:5173/embed.js" data-bot-slug="${bot.slug}"></script>`;
 
     return (
         <Card>
