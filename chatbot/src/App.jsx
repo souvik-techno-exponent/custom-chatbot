@@ -39,7 +39,7 @@ export default function App() {
       }
     };
     window.addEventListener('beforeunload', onBeforeUnload);
-    return () => window.removeEventListener('beforeunload', onBeforeunload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, [messages, saved]);
 
   useEffect(() => {

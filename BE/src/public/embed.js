@@ -8,7 +8,7 @@
  * Conversation is anonymous; a local threadKey is stored in localStorage per (botSlug + pageHost).
  */
 (function () {
-    const SERVER_ORIGIN = 'http://localhost:4000';
+    // const SERVER_ORIGIN = 'http://localhost:4000';
     const WIDGET_URL = 'http://localhost:5174/index.html'; // << DEV
 
     const currentScript = document.currentScript;
