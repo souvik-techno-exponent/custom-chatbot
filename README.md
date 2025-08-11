@@ -19,7 +19,7 @@ This repository contains a minimal MERN‑stack chatbot platform. It lets you:
    cd vit
    npm run build
    ```
-   The compiled files are output to `widget/dist/`.
+   The compiled files are output to `vit/dist/`.
 
 3. **Start the backend**
    ```bash

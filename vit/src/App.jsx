@@ -1,17 +1,10 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
-import ChatWidget from './ChatWidget'
+import ChatWidget from './ChatWidget';
+import BotsList from './pages/BotsList';
+import CreateBot from './pages/CreateBot';
 
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <ChatWidget />
-    </>
-  )
+export default function App() {
+  const path = window.location.pathname;
+  if (path.startsWith('/admin/create')) return <CreateBot />;
+  if (path.startsWith('/admin')) return <BotsList />;
+  return <ChatWidget />;
 }
-
-export default App
