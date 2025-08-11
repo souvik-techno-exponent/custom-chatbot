@@ -19,7 +19,6 @@ app.use(morgan('dev'));
 // Relaxed CORS for POC (tighten for prod)
 const allow = [
     process.env.CLIENT_ADMIN_ORIGIN || 'http://localhost:5173',
-    process.env.WIDGET_ORIGIN || 'http://localhost:5174'
 ];
 app.use(cors({
     origin: (origin, cb) => cb(null, true),
