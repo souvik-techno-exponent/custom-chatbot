@@ -13,57 +13,61 @@
     // - Else build from (origin of this script) + (data-widget-path or default).
     const currentScript = document.currentScript;
     const scriptOrigin = new URL(currentScript.src).origin;
-    const widgetUrlAttr = currentScript.getAttribute('data-widget-url');
-    const widgetOriginAttr = currentScript.getAttribute('data-widget-origin'); // optional override
-    const widgetPathAttr = currentScript.getAttribute('data-widget-path') || '/chat-bot/index.html';
+    const widgetUrlAttr = currentScript.getAttribute("data-widget-url");
+    const widgetOriginAttr = currentScript.getAttribute("data-widget-origin"); // optional override
+    const widgetPathAttr = currentScript.getAttribute("data-widget-path") || "/chat-bot/index.html";
 
-    const WIDGET_URL = widgetUrlAttr
-        ? widgetUrlAttr
-        : `${widgetOriginAttr || scriptOrigin}${widgetPathAttr}`;
+    const WIDGET_URL = widgetUrlAttr ? widgetUrlAttr : `${widgetOriginAttr || scriptOrigin}${widgetPathAttr}`;
 
-    const botSlug = (currentScript && currentScript.getAttribute('data-bot-slug')) || '';
+    const apiBase = currentScript.getAttribute("data-api-base") || ""; // e.g. http://localhost:4000/api
     if (!botSlug) {
-        console.error('[Embed] data-bot-slug is required');
+        console.error("[Embed] data-bot-slug is required");
         return;
     }
 
-    const container = document.createElement('div');
-    container.style.position = 'fixed';
-    container.style.bottom = '20px';
-    container.style.right = '20px';
-    container.style.zIndex = '2147483647';
+    // state from server (optional)
+    let remoteUI = null;
+    async function loadUI() {
+        if (!apiBase) return null;
+        try {
+            const r = await fetch(`${apiBase}/bots/${botSlug}`);
+            if (!r.ok) return null;
+            const bot = await r.json();
+            return bot.ui || null;
+        } catch {
+            return null;
+        }
+    }
+
+    const container = document.createElement("div");
+    container.style.position = "fixed";
+    container.style.zIndex = "2147483647";
     document.body.appendChild(container);
 
-    const button = document.createElement('button');
-    button.innerText = 'Chat';
-    button.style.padding = '10px 16px';
-    button.style.borderRadius = '9999px';
-    button.style.border = 'none';
-    button.style.cursor = 'pointer';
-    button.style.boxShadow = '0 6px 18px rgba(0,0,0,0.2)';
-    button.style.background = '#1976d2';
-    button.style.color = '#fff';
+    const button = document.createElement("button");
+    button.innerText = "Chat";
+    button.style.padding = "10px 16px";
+    button.style.borderRadius = "9999px";
+    button.style.border = "none";
+    button.style.cursor = "pointer";
+    button.style.boxShadow = "0 6px 18px rgba(0,0,0,0.2)";
+    button.style.background = "#1976d2";
+    button.style.color = "#fff";
     container.appendChild(button);
 
-    const panel = document.createElement('div');
-    panel.style.position = 'fixed';
-    panel.style.bottom = '80px';
-    panel.style.right = '20px';
-    panel.style.width = '380px';
-    panel.style.height = '560px';
-    panel.style.maxWidth = '95vw';
-    panel.style.maxHeight = '80vh';
-    panel.style.boxShadow = '0 10px 30px rgba(0,0,0,0.25)';
-    panel.style.borderRadius = '16px';
-    panel.style.overflow = 'hidden';
-    panel.style.display = 'none';
+    const panel = document.createElement("div");
+    panel.style.position = "fixed";
+    panel.style.boxShadow = "0 10px 30px rgba(0,0,0,0.25)";
+    panel.style.borderRadius = "16px";
+    panel.style.overflow = "hidden";
+    panel.style.display = "none";
     container.appendChild(panel);
 
-    const iframe = document.createElement('iframe');
-    iframe.title = 'Chatbot';
-    iframe.style.width = '100%';
-    iframe.style.height = '100%';
-    iframe.style.border = '0';
+    const iframe = document.createElement("iframe");
+    iframe.title = "Chatbot";
+    iframe.style.width = "100%";
+    iframe.style.height = "100%";
+    iframe.style.border = "0";
     panel.appendChild(iframe);
 
     function getThreadKey() {
@@ -72,24 +76,68 @@
             const keyName = `poc_thread_${botSlug}_${host}`;
             let key = localStorage.getItem(keyName);
             if (!key) {
-                key = 't-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+                key = "t-" + Math.random().toString(36).slice(2) + Date.now().toString(36);
                 localStorage.setItem(keyName, key);
             }
             return key;
         } catch {
             // If localStorage blocked, fallback to ephemeral key per open
-            return 't-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+            return "t-" + Math.random().toString(36).slice(2) + Date.now().toString(36);
         }
     }
 
-    button.addEventListener('click', () => {
-        const visible = panel.style.display === 'block';
-        panel.style.display = visible ? 'none' : 'block';
+    function applyLayout(ui) {
+        const layout = (ui && ui.layout) || {};
+        const pos = layout.position || "bottom-right";
+        const width = layout.width || 380;
+        const height = layout.height || 560;
+        const maxWidth = layout.maxWidth || 420;
+        // position container
+        const margin = 20;
+        container.style.bottom = margin + "px";
+        if (pos === "bottom-left") {
+            container.style.left = margin + "px";
+            container.style.right = "";
+        } else {
+            container.style.right = margin + "px";
+            container.style.left = "";
+        }
+        // panel size/pos
+        panel.style.width = Math.min(width, window.innerWidth * 0.95) + "px";
+        panel.style.height = Math.min(height, window.innerHeight * 0.8) + "px";
+        panel.style.maxWidth = Math.min(maxWidth, window.innerWidth * 0.95) + "px";
+        panel.style.maxHeight = "80vh";
+        panel.style.bottom = margin + 60 + "px";
+        if (pos === "bottom-left") {
+            panel.style.left = margin + "px";
+            panel.style.right = "";
+        } else {
+            panel.style.right = margin + "px";
+            panel.style.left = "";
+        }
+        // brand color for launcher
+        const brand = (ui && ui.appearance && ui.appearance.brandColor) || "#1976d2";
+        button.style.background = brand;
+    }
+
+    button.addEventListener("click", () => {
+        const visible = panel.style.display === "block";
+        panel.style.display = visible ? "none" : "block";
         if (!visible) {
             const threadKey = getThreadKey();
             const pageUrl = location.href;
-            const src = `${WIDGET_URL}?bot=${encodeURIComponent(botSlug)}&thread=${encodeURIComponent(threadKey)}&page=${encodeURIComponent(pageUrl)}`;
+            const src = `${WIDGET_URL}?bot=${encodeURIComponent(botSlug)}&thread=${encodeURIComponent(threadKey)}&page=${encodeURIComponent(
+                pageUrl
+            )}`;
             if (iframe.src !== src) iframe.src = src;
         }
     });
+
+    // init
+    loadUI()
+        .then((ui) => {
+            remoteUI = ui;
+            applyLayout(remoteUI);
+        })
+        .catch(() => applyLayout(null));
 })();
