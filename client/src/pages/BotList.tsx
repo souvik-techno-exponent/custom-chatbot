@@ -1,21 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { listBots } from '../api.js';
 import { Link as RouterLink } from 'react-router-dom';
 import { CircularProgress, Card, CardContent, Typography, List, ListItem, ListItemButton, ListItemText } from '@mui/material';
 import { IconButton } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { deleteBot } from '../api.js';
+import { listBots, deleteBot } from '../api';
+import type { Bot } from '../../src/types';
+
 
 export default function BotList() {
     const [loading, setLoading] = useState(true);
-    const [bots, setBots] = useState([]);
+    const [bots, setBots] = useState<Bot[]>([]);
 
     useEffect(() => {
         listBots().then(setBots).finally(() => setLoading(false));
     }, []);
 
     // ADD this handler inside component
-    async function handleDelete(slug, name) {
+    async function handleDelete(slug: string, name: string) {
         const yes = window.confirm(`Delete bot "${name}"? This will remove all its threads.`);
         if (!yes) return;
         try {

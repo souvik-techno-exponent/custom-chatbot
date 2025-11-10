@@ -1,12 +1,12 @@
 import { Router, Request, Response } from 'express';
-import { Bot } from "../models/Bot.js";
-import { QUESTION_POOL_25 } from "../data/questionPool.js";
-import { Thread } from "../models/Thread.js";
+import { Bot } from "../models/Bot";
+import { QUESTION_POOL_25 } from "../data/questionPool";
+import { Thread } from "../models/Thread";
 
 const router = Router();
 
 // Utility: pick 5 unique random questions from pool of 25
-function pickFiveUnique(pool) {
+function pickFiveUnique(pool: string[]): string[] {
     const indices = new Set();
     while (indices.size < 5) {
         indices.add(Math.floor(Math.random() * pool.length));
@@ -17,9 +17,21 @@ function pickFiveUnique(pool) {
 // Create a bot (auto-pick 5 unique questions)
 router.post('/', async (req: Request, res: Response) => {
     try {
-        const { name, brandColor, welcomeText, ui } = req.body || {};
+        const body = (req.body ?? {}) as {
+            name?: string;
+            brandColor?: string;
+            welcomeText?: string;
+            ui?: unknown;
+        };
         const questions = pickFiveUnique(QUESTION_POOL_25);
-        const bot = await Bot.create((req.body ?? {}) as Partial<InstanceType<typeof Bot>>);
+        // Ensure we actually store the picked questions; body can override brandColor/welcomeText/ui
+        const bot = await Bot.create({
+            name: body.name,
+            brandColor: body.brandColor,
+            welcomeText: body.welcomeText,
+            ui: body.ui,
+            questions,
+        } as any);
         res.json(bot);
     } catch (e) {
         console.error(e);

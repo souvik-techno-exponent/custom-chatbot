@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { createBot } from "../api.js";
+import { createBot } from "../api";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, TextField, Button, Stack, Typography } from "@mui/material";
 
@@ -19,7 +19,7 @@ export default function CreateBot() {
 
     const nav = useNavigate();
 
-    async function onSubmit(e) {
+    async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         const bot = await createBot({
             name,
@@ -53,8 +53,8 @@ export default function CreateBot() {
                         onChange={(e) => setPosition(e.target.value)}
                     />
                     <Stack direction="row" spacing={2}>
-                        <TextField label="Width" type="number" value={width} onChange={(e) => setWidth(e.target.value)} />
-                        <TextField label="Height" type="number" value={height} onChange={(e) => setHeight(e.target.value)} />
+                        <TextField label="Width" type="number" value={width} onChange={(e) => setWidth(Number(e.target.value))} />
+                        <TextField label="Height" type="number" value={height} onChange={(e) => setHeight(Number(e.target.value))} />
                     </Stack>
                     <TextField label="Input Placeholder" value={inputPlaceholder} onChange={(e) => setInputPlaceholder(e.target.value)} />
                     <Stack direction="row" spacing={2}>

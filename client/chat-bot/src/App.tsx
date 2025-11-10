@@ -15,23 +15,27 @@ import {
     Button,
 } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
-import { bootstrap, nextQuestion, saveTranscript } from "./api.js";
+import { bootstrap, nextQuestion, saveTranscript } from "./api";
+import type { Bot, ThreadMessage } from "../../src/types";
 
 
 // Parse query params set by embed script
-function useParams() {
-    return useMemo(() => Object.fromEntries(new URLSearchParams(window.location.search)), []);
+function useParams(): Record<string, string> {
+    return useMemo(
+        () => Object.fromEntries(new URLSearchParams(window.location.search)) as Record<string, string>,
+        []
+    );
 }
 
 export default function App() {
     const { bot: botSlug, thread: threadKey, page: pageUrl } = useParams();
-    const [bot, setBot] = useState(null);
-    const [messages, setMessages] = useState([]);
+    const [bot, setBot] = useState<Bot | null>(null);
+    const [messages, setMessages] = useState<ThreadMessage[]>([]);
     const [input, setInput] = useState("");
     const [askSaveOpen, setAskSaveOpen] = useState(false);
     const [saved, setSaved] = useState(false);
-    const chatRef = useRef(null);
-    const bootedRef = useRef(false);
+    const chatRef = useRef<HTMLDivElement | null>(null);
+    const bootedRef = useRef<string | false>(false);
     const [isTyping, setIsTyping] = useState(false);
 
     // 1) Run bootstrap ONCE per slug/thread/page change
@@ -72,7 +76,7 @@ export default function App() {
 
     // 2) Handle beforeunload separately so deps can include messages/saved
     useEffect(() => {
-        const onBeforeUnload = (e) => {
+        const onBeforeUnload = (e: BeforeUnloadEvent) => {
             const hasUserMsgs = messages.some((m) => m.role === "user");
             if (!saved && hasUserMsgs) {
                 e.preventDefault();
@@ -118,7 +122,7 @@ export default function App() {
         }
     }
 
-    async function handleSaveConsent(ok) {
+    async function handleSaveConsent(ok: boolean) {
         setAskSaveOpen(false);
         if (!ok) return;
         try {

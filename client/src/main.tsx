@@ -2,9 +2,9 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import { CssBaseline, AppBar, Toolbar, Typography, Container, Button, Box } from '@mui/material';
-import BotList from './pages/BotList.js';
-import CreateBot from './pages/CreateBot.js';
-import BotDetail from './pages/BotDetail.js';
+import BotList from './pages/BotList';
+import CreateBot from './pages/CreateBot';
+import BotDetail from './pages/BotDetail';
 
 function AppShell() {
   return (
@@ -31,7 +31,7 @@ function AppShell() {
   );
 }
 
-createRoot(document.getElementById('root')).render(
+createRoot(document.getElementById('root') as HTMLElement).render(
   <BrowserRouter>
     <AppShell />
   </BrowserRouter>
