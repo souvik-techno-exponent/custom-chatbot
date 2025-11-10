@@ -8,7 +8,15 @@ export async function bootstrap(
         `${API}/threads/${botSlug}/thread?threadKey=${encodeURIComponent(threadKey)}&pageUrl=${encodeURIComponent(pageUrl)}`
     );
 
-    if (!r.ok) throw new Error('Failed to bootstrap');
+    if (!r.ok) {
+        let message = 'Failed to bootstrap';
+        try {
+            const j = await r.json();
+            if (j?.error) message = j.error;
+        } catch { }
+        if (r.status === 404) message = 'Bot not found';
+        throw new Error(message);
+    }
     return r.json();
 }
 
@@ -19,7 +27,15 @@ export async function nextQuestion(botSlug: string, answersCount: number): Promi
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answersCount })
     });
-    if (!r.ok) throw new Error('Failed to get next question');
+    if (!r.ok) {
+        let message = 'Failed to bootstrap';
+        try {
+            const j = await r.json();
+            if (j?.error) message = j.error;
+        } catch { }
+        if (r.status === 404) message = 'Bot not found';
+        throw new Error(message);
+    }
     return r.json();
 }
 

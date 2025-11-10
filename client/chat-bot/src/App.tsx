@@ -31,12 +31,14 @@ export default function App() {
     const { bot: botSlug, thread: threadKey, page: pageUrl } = useParams();
     const [bot, setBot] = useState<Bot | null>(null);
     const [messages, setMessages] = useState<ThreadMessage[]>([]);
+    const [bootError, setBootError] = useState<string | null>(null);
     const [input, setInput] = useState("");
     const [askSaveOpen, setAskSaveOpen] = useState(false);
     const [saved, setSaved] = useState(false);
     const chatRef = useRef<HTMLDivElement | null>(null);
     const bootedRef = useRef<string | false>(false);
     const [isTyping, setIsTyping] = useState(false);
+
 
     // 1) Run bootstrap ONCE per slug/thread/page change
     useEffect(() => {
@@ -45,31 +47,37 @@ export default function App() {
         bootedRef.current = bootKey;
 
         async function init() {
-            const { bot, questions } = await bootstrap(botSlug, threadKey, pageUrl);
-            setBot(bot);
-            const ui = bot.ui || {};
-            // Apply CSS variables / mode / font
-            const root = document.documentElement;
-            root.style.setProperty("--cb-brand", ui.appearance?.brandColor || bot.brandColor || "#1976d2");
-            root.style.setProperty("--cb-accent", ui.appearance?.accentColor || "#42a5f5");
-            root.style.setProperty("--cb-bg", ui.appearance?.background || "#fafafa");
-            root.style.setProperty("--cb-surface", ui.appearance?.surface || "#ffffff");
-            root.style.setProperty("--cb-text", ui.appearance?.textPrimary || "#111111");
-            root.style.setProperty("--cb-text-secondary", ui.appearance?.textSecondary || "#666666");
-            root.style.setProperty("--cb-radius", (ui.appearance?.borderRadius ?? 12) + "px");
-            if (ui.appearance?.font && ui.appearance.font !== "system") {
-                root.style.setProperty("--cb-font", `${ui.appearance.font}, system-ui, -apple-system, Segoe UI, Roboto, sans-serif`);
-            }
-            const mode = ui.appearance?.mode || "light";
-            if (mode === "dark") document.body.classList.add("cb-dark");
-            else document.body.classList.remove("cb-dark");
+            try {
+                const { bot, questions } = await bootstrap(botSlug, threadKey, pageUrl);
+                setBot(bot);
+                const ui = bot.ui || {};
+                // Apply CSS variables / mode / font
+                const root = document.documentElement;
+                root.style.setProperty("--cb-brand", ui.appearance?.brandColor || bot.brandColor || "#1976d2");
+                root.style.setProperty("--cb-accent", ui.appearance?.accentColor || "#42a5f5");
+                root.style.setProperty("--cb-bg", ui.appearance?.background || "#fafafa");
+                root.style.setProperty("--cb-surface", ui.appearance?.surface || "#ffffff");
+                root.style.setProperty("--cb-text", ui.appearance?.textPrimary || "#111111");
+                root.style.setProperty("--cb-text-secondary", ui.appearance?.textSecondary || "#666666");
+                root.style.setProperty("--cb-radius", (ui.appearance?.borderRadius ?? 12) + "px");
+                if (ui.appearance?.font && ui.appearance.font !== "system") {
+                    root.style.setProperty("--cb-font", `${ui.appearance.font}, system-ui, -apple-system, Segoe UI, Roboto, sans-serif`);
+                }
+                const mode = ui.appearance?.mode || "light";
+                if (mode === "dark") document.body.classList.add("cb-dark");
+                else document.body.classList.remove("cb-dark");
 
-            // Seed messages: optional welcomeText first, then first question
-            const seeded: ThreadMessage[] = [];
-            const welcome = ui.messaging?.welcomeText || bot.welcomeText;
-            if (welcome) seeded.push({ role: "assistant", text: welcome, ts: Date.now() });
-            if (questions?.[0]) seeded.push({ role: "assistant", text: questions[0], ts: Date.now() });
-            if (seeded.length) setMessages(seeded);
+                // Seed messages: optional welcomeText first, then first question
+                const seeded: ThreadMessage[] = [];
+                const welcome = ui.messaging?.welcomeText || bot.welcomeText;
+                if (welcome) seeded.push({ role: "assistant", text: welcome, ts: Date.now() });
+                if (questions?.[0]) seeded.push({ role: "assistant", text: questions[0], ts: Date.now() });
+                if (seeded.length) setMessages(seeded);
+                if (seeded.length) setMessages(seeded);
+            } catch (e: any) {
+                console.error(e);
+                setBootError(e?.message || 'Failed to load chatbot');
+            }
         }
         init();
     }, [botSlug, threadKey, pageUrl]);
@@ -136,6 +144,11 @@ export default function App() {
 
     return (
         <Box sx={{ height: "100vh", display: "flex", flexDirection: "column", bgcolor: "var(--cb-bg)" }}>
+            {bootError && (
+                <Box sx={{ p: 2, bgcolor: "#fff0f0", color: "#b00020" }}>
+                    <Typography variant="body2">{bootError}</Typography>
+                </Box>
+            )}
             {(bot?.ui?.layout?.showHeader ?? true) && (
                 <AppBar position="static" sx={{ bgcolor: "var(--cb-brand)" }}>
                     <Toolbar sx={{ minHeight: (bot?.ui?.layout?.headerHeight ?? 56) + "px" }}>
