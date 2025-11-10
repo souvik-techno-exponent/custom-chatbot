@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response } from 'express';
 import { Bot } from "../models/Bot.js";
 import { QUESTION_POOL_25 } from "../data/questionPool.js";
 import { Thread } from "../models/Thread.js";
@@ -15,24 +15,11 @@ function pickFiveUnique(pool) {
 }
 
 // Create a bot (auto-pick 5 unique questions)
-router.post("/", async (req, res) => {
+router.post('/', async (req: Request, res: Response) => {
     try {
         const { name, brandColor, welcomeText, ui } = req.body || {};
         const questions = pickFiveUnique(QUESTION_POOL_25);
-        const bot = await Bot.create({
-            name,
-            brandColor: brandColor || "#1976d2",
-            welcomeText: welcomeText || "Hi! I'm your assistant.",
-            questions,
-            // merge minimal defaults if ui is partially sent
-            ui: {
-                appearance: { brandColor: brandColor || "#1976d2", ...(ui?.appearance || {}) },
-                layout: { ...(ui?.layout || {}) },
-                messaging: { welcomeText: welcomeText || "", ...(ui?.messaging || {}) },
-                interaction: { ...(ui?.interaction || {}) },
-                content: { ...(ui?.content || {}) },
-            },
-        });
+        const bot = await Bot.create((req.body ?? {}) as Partial<InstanceType<typeof Bot>>);
         res.json(bot);
     } catch (e) {
         console.error(e);
@@ -41,19 +28,19 @@ router.post("/", async (req, res) => {
 });
 
 // List bots
-router.get("/", async (_req, res) => {
+router.get('/', async (_req: Request, res: Response) => {
     const bots = await Bot.find().sort({ createdAt: -1 });
     res.json(bots);
 });
 
 // Get a single bot
-router.get("/:slug", async (req, res) => {
+router.get('/:slug', async (req: Request, res: Response) => {
     const bot = await Bot.findOne({ slug: req.params.slug });
     if (!bot) return res.status(404).json({ error: "Not found" });
     res.json(bot);
 });
 
-router.delete("/:slug", async (req, res) => {
+router.delete('/:slug', async (req: Request, res: Response) => {
     try {
         const { slug } = req.params;
         const bot = await Bot.findOne({ slug });

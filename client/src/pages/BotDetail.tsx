@@ -1,21 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getBot } from "../api.js";
+import { getBot, deleteBot } from "../api";
 import { Card, CardContent, Typography, TextField, Stack, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { deleteBot } from "../api.js";
 import DeleteIcon from "@mui/icons-material/Delete";
+import type { Bot } from "../types";
 
 const EMBED_BASE = import.meta.env.VITE_EMBED_BASE || window.location.origin;
 const WIDGET_PATH = import.meta.env.VITE_WIDGET_PATH || "/chat-bot/index.html";
 
 export default function BotDetail() {
-    const { slug } = useParams();
-    const [bot, setBot] = useState(null);
+    const { slug } = useParams<{ slug: string }>();
+    const [bot, setBot] = useState<Bot | null>(null);
     const nav = useNavigate();
 
     useEffect(() => {
-        getBot(slug).then(setBot);
+        if (!slug) return;
+        getBot(slug).then(setBot).catch(console.error);
     }, [slug]);
 
     async function onDelete() {

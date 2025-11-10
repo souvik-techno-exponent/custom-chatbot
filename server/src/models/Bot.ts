@@ -1,9 +1,9 @@
-import mongoose from "mongoose";
+import mongoose, { InferSchemaType, Schema } from "mongoose";
 import { customAlphabet } from "nanoid";
 
 const nanoid = customAlphabet("1234567890abcdefghijklmnopqrstuvwxyz", 10);
 
-const BotSchema = new mongoose.Schema(
+const BotSchema = new Schema(
     {
         name: { type: String, required: true },
         slug: { type: String, unique: true, default: () => nanoid() },
@@ -87,4 +87,5 @@ const BotSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-export const Bot = mongoose.model("Bot", BotSchema);
+export type BotDoc = InferSchemaType<typeof BotSchema>;
+export const Bot = mongoose.model<BotDoc>("Bot", BotSchema);

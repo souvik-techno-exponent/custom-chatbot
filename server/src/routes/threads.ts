@@ -1,14 +1,14 @@
-import { Router } from 'express';
 import { Thread } from '../models/Thread.js';
 import { Bot } from '../models/Bot.js';
+import { Router, Request, Response } from 'express';
 
 const router = Router();
 
 // GET bootstrap: do NOT create any DB record. Just return bot & questions.
-router.get('/:botSlug/thread', async (req, res) => {
+router.get('/:botSlug/thread', async (req: Request, res: Response) => {
     try {
         const { botSlug } = req.params;
-        const { threadKey, pageUrl } = req.query;
+        const { threadKey, pageUrl } = req.query as { threadKey?: string; pageUrl?: string };
         if (!threadKey || !pageUrl) {
             return res.status(400).json({ error: 'threadKey and pageUrl are required' });
         }
@@ -24,12 +24,12 @@ router.get('/:botSlug/thread', async (req, res) => {
     }
 });
 // POST next-step: stateless. No DB writes. Compute next question from answersCount.
-router.post('/:botSlug/thread', async (req, res) => {
+router.post('/:botSlug/thread', async (req: Request, res: Response) => {
     try {
         const { botSlug } = req.params;
-        const { answersCount } = req.body || {};
+        const { answersCount } = (req.body || {}) as { answersCount?: number };
         // answersCount = how many user answers have been given so far (including current one)
-        if (typeof answersCount !== 'number' || answersCount < 0) {
+        if (answersCount == null || typeof answersCount !== 'number' || answersCount < 0) {
             return res.status(400).json({ error: 'answersCount is required and must be >= 0' });
         }
 
@@ -45,10 +45,11 @@ router.post('/:botSlug/thread', async (req, res) => {
 });
 
 // POST save: only when user explicitly consents, persist the full transcript once.
-router.post('/:botSlug/save', async (req, res) => {
+router.post('/:botSlug/save', async (req: Request, res: Response) => {
     try {
         const { botSlug } = req.params;
-        const { threadKey, pageUrl, transcript } = req.body || {};
+        const { threadKey, pageUrl, transcript } =
+            (req.body || {}) as { threadKey?: string; pageUrl?: string; transcript?: Array<{ role: 'assistant' | 'user'; text: string; ts?: number }> };
         if (!threadKey || !pageUrl || !Array.isArray(transcript)) {
             return res.status(400).json({ error: 'threadKey, pageUrl and transcript[] are required' });
         }

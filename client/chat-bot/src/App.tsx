@@ -17,6 +17,7 @@ import {
 import SendIcon from "@mui/icons-material/Send";
 import { bootstrap, nextQuestion, saveTranscript } from "./api.js";
 
+
 // Parse query params set by embed script
 function useParams() {
     return useMemo(() => Object.fromEntries(new URLSearchParams(window.location.search)), []);

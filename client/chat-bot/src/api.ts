@@ -1,6 +1,9 @@
-const API = import.meta.env.VITE_API_BASE || 'http://localhost:4000/api';
+const API = import.meta.env.VITE_API_BASE ?? 'http://localhost:4000/api';
+export type BootstrapResp = { bot: import('../../src/types').Bot; questions: string[] };
 
-export async function bootstrap(botSlug, threadKey, pageUrl) {
+export async function bootstrap(
+    botSlug: string, threadKey: string, pageUrl: string
+): Promise<BootstrapResp> {
     const r = await fetch(
         `${API}/threads/${botSlug}/thread?threadKey=${encodeURIComponent(threadKey)}&pageUrl=${encodeURIComponent(pageUrl)}`
     );
@@ -10,7 +13,7 @@ export async function bootstrap(botSlug, threadKey, pageUrl) {
 }
 
 // Stateless step advance: send answersCount only, server returns next question
-export async function nextQuestion(botSlug, answersCount) {
+export async function nextQuestion(botSlug: string, answersCount: number): Promise<{ nextQuestion: string | null }> {
     const r = await fetch(`${API}/threads/${botSlug}/thread`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -21,7 +24,11 @@ export async function nextQuestion(botSlug, answersCount) {
 }
 
 // Persist transcript only on consent
-export async function saveTranscript(botSlug, { threadKey, pageUrl, transcript }) {
+export async function saveTranscript(
+    botSlug: string,
+    { threadKey, pageUrl, transcript }:
+        { threadKey: string; pageUrl: string; transcript: { role: 'assistant' | 'user'; text: string; ts: number }[] }
+): Promise<{ ok: boolean; saved: boolean; threadId: string }> {
     const r = await fetch(`${API}/threads/${botSlug}/save`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

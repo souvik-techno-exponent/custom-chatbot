@@ -29,8 +29,8 @@ app.use(cors({
 app.use('/api/bots', botsRouter);
 app.use('/api/threads', threadsRouter);
 
-const PORT = process.env.PORT || 4000;
+const PORT = Number(process.env.PORT) || 4000;
 
-connectDB(process.env.MONGO_URI)
+connectDB(String(process.env.MONGO_URI))
     .then(() => app.listen(PORT, () => console.log('Server running on ' + PORT)))
     .catch(err => { console.error(err); process.exit(1); });

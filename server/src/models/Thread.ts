@@ -1,6 +1,6 @@
-import mongoose from 'mongoose';
+import mongoose, { Schema, InferSchemaType } from 'mongoose';;
 
-const ThreadSchema = new mongoose.Schema(
+const ThreadSchema = new Schema(
   {
     botSlug: { type: String, index: true, required: true },
     // Anonymous local thread key generated in widget (NOT a user id)
@@ -19,4 +19,5 @@ const ThreadSchema = new mongoose.Schema(
 
 ThreadSchema.index({ botSlug: 1, threadKey: 1, pageUrl: 1 }, { unique: true });
 
-export const Thread = mongoose.model('Thread', ThreadSchema);
+export type ThreadDoc = InferSchemaType<typeof ThreadSchema>;
+export const Thread = mongoose.model<ThreadDoc>('Thread', ThreadSchema);
