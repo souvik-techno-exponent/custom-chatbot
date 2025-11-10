@@ -65,7 +65,7 @@ export default function App() {
             else document.body.classList.remove("cb-dark");
 
             // Seed messages: optional welcomeText first, then first question
-            const seeded = [];
+            const seeded: ThreadMessage[] = [];
             const welcome = ui.messaging?.welcomeText || bot.welcomeText;
             if (welcome) seeded.push({ role: "assistant", text: welcome, ts: Date.now() });
             if (questions?.[0]) seeded.push({ role: "assistant", text: questions[0], ts: Date.now() });

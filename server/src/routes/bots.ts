@@ -7,7 +7,7 @@ const router = Router();
 
 // Utility: pick 5 unique random questions from pool of 25
 function pickFiveUnique(pool: string[]): string[] {
-    const indices = new Set();
+    const indices = new Set<number>();
     while (indices.size < 5) {
         indices.add(Math.floor(Math.random() * pool.length));
     }

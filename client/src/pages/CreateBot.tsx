@@ -9,9 +9,12 @@ export default function CreateBot() {
     const [welcomeText, setWelcomeText] = useState("Hi! I'm your assistant.");
 
     // NEW: UI config minimal controls
+    type Mode = "light" | "dark" | "auto";
+    type Position = "bottom-right" | "bottom-left" | "floating" | "inline";
+
     const [accentColor, setAccentColor] = useState("#42a5f5");
-    const [mode, setMode] = useState("light"); // 'light'|'dark'|'auto'
-    const [position, setPosition] = useState("bottom-right");
+    const [mode, setMode] = useState<Mode>("light");
+    const [position, setPosition] = useState<Position>("bottom-right");
     const [width, setWidth] = useState(380);
     const [height, setHeight] = useState(560);
     const [showHeader, setShowHeader] = useState(true);
@@ -46,11 +49,15 @@ export default function CreateBot() {
                     <TextField label="Welcome Text" value={welcomeText} onChange={(e) => setWelcomeText(e.target.value)} />
 
                     <TextField label="Accent Color" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} />
-                    <TextField label="Mode (light|dark|auto)" value={mode} onChange={(e) => setMode(e.target.value)} />
+                    <TextField
+                        label="Mode (light|dark|auto)"
+                        value={mode}
+                        onChange={(e) => setMode(e.target.value as Mode)}
+                    />
                     <TextField
                         label="Launcher Position (bottom-right|bottom-left|floating|inline)"
                         value={position}
-                        onChange={(e) => setPosition(e.target.value)}
+                        onChange={(e) => setPosition(e.target.value as Position)}
                     />
                     <Stack direction="row" spacing={2}>
                         <TextField label="Width" type="number" value={width} onChange={(e) => setWidth(Number(e.target.value))} />
