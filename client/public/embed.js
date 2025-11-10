@@ -11,7 +11,12 @@
     // Resolve widget URL without hardcoding:
     // - If data-widget-url is provided, use it as-is (absolute URL).
     // - Else build from (origin of this script) + (data-widget-path or default).
+
     const currentScript = document.currentScript;
+    if (!currentScript) {
+        console.error("[Embed] Unable to locate current <script> tag.");
+        return;
+    }
     const scriptOrigin = new URL(currentScript.src).origin;
     const widgetUrlAttr = currentScript.getAttribute("data-widget-url");
     const widgetOriginAttr = currentScript.getAttribute("data-widget-origin"); // optional override
@@ -19,6 +24,8 @@
 
     const WIDGET_URL = widgetUrlAttr ? widgetUrlAttr : `${widgetOriginAttr || scriptOrigin}${widgetPathAttr}`;
 
+    // REQUIRED: bot slug for this embed
+    const botSlug = (currentScript.getAttribute("data-bot-slug") || "").trim();
     const apiBase = currentScript.getAttribute("data-api-base") || ""; // e.g. http://localhost:4000/api
     if (!botSlug) {
         console.error("[Embed] data-bot-slug is required");
@@ -39,10 +46,16 @@
         }
     }
 
+    // Defer DOM ops until <body> is ready
+    function onBodyReady(cb) {
+        if (document.body) cb();
+        else document.addEventListener("DOMContentLoaded", cb, { once: true });
+    }
+
     const container = document.createElement("div");
     container.style.position = "fixed";
     container.style.zIndex = "2147483647";
-    document.body.appendChild(container);
+    onBodyReady(() => document.body.appendChild(container));
 
     const button = document.createElement("button");
     button.innerText = "Chat";
@@ -132,6 +145,9 @@
             if (iframe.src !== src) iframe.src = src;
         }
     });
+
+    // Keep layout responsive on viewport changes
+    window.addEventListener("resize", () => applyLayout(remoteUI));
 
     // init
     loadUI()
