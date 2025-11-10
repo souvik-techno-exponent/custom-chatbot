@@ -1,0 +1,14 @@
+{
+    "name": "chat-widget-monorepo",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+        "typecheck:client": "npx -y -p typescript tsc -p client/tsconfig.json --noEmit",
+        "typecheck:server": "npx -y -p typescript tsc -p server/tsconfig.json --noEmit",
+        "check": "npm run typecheck:client && npm run typecheck:server"
+    },
+    "devDependencies": {
+        "typescript": "^5.9.3"
+    }
+}
