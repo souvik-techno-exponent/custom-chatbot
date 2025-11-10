@@ -2,9 +2,9 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import { CssBaseline, AppBar, Toolbar, Typography, Container, Button, Box } from '@mui/material';
-import BotList from './pages/BotList.jsx';
-import CreateBot from './pages/CreateBot.jsx';
-import BotDetail from './pages/BotDetail.jsx';
+import BotList from './pages/BotList.js';
+import CreateBot from './pages/CreateBot.js';
+import BotDetail from './pages/BotDetail.js';
 
 function AppShell() {
   return (
